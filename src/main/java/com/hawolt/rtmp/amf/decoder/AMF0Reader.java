@@ -46,4 +46,6 @@ public interface AMF0Reader {
     String readXMLAMF0();
 
     TypedObject readTypedObjectAMF0();
+
+    void storeObjectAMF0(Object object);
 }

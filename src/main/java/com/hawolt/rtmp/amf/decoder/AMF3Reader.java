@@ -1,5 +1,7 @@
 package com.hawolt.rtmp.amf.decoder;
 
+import com.hawolt.rtmp.amf.ClassDefinition;
+
 import java.time.LocalDateTime;
 
 /**
@@ -9,6 +11,7 @@ import java.time.LocalDateTime;
  */
 
 public interface AMF3Reader {
+
     Object decodeAMF3();
 
     Object readUndefinedAMF3();
@@ -46,4 +49,16 @@ public interface AMF3Reader {
     Object readVectorObjectAMF3();
 
     Object readDictionaryAMF3();
+
+    void storeObjectAMF3(Object object);
+
+    Object getStoredObjectAMF3(int index);
+
+    void storeStringAMF3(String string);
+
+    String getStoredStringAMF3(int index);
+
+    void storeClassDefinitionAMF3(ClassDefinition classDefinition);
+
+    ClassDefinition getStoredClassDefinitionAMF3(int index);
 }

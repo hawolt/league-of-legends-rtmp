@@ -33,6 +33,7 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
     protected int position;
 
     private void resetAMF0() {
+        Logger.debug("AMF0 clearing references");
         objectListAMF0.clear();
     }
 
@@ -76,46 +77,67 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
         byte op = read();
         AMF0Type type = AMF0Type.find(op);
         if (type == null) throw new NotImplementedException("Unknown AMF0 type: " + op);
+        Object amf0;
         switch (type) {
             case NUMBER:
-                return readNumberAMF0();
+                amf0 = readNumberAMF0();
+                break;
             case BOOLEAN:
-                return readBooleanAMF0();
+                amf0 = readBooleanAMF0();
+                break;
             case STRING:
-                return readUTF8StringAMF0();
+                amf0 = readUTF8StringAMF0();
+                break;
             case OBJECT:
-                return readObjectAMF0();
+                amf0 = readObjectAMF0();
+                break;
             case MOVIECLIP:
-                return readMovieClipAMF0();
+                amf0 = readMovieClipAMF0();
+                break;
             case NULL:
-                return readNullAMF0();
+                amf0 = readNullAMF0();
+                break;
             case UNDEFINED:
-                return readUndefinedAMF0();
+                amf0 = readUndefinedAMF0();
+                break;
             case REFERENCE:
-                return readTypeReferenceAMF0();
+                amf0 = readTypeReferenceAMF0();
+                break;
             case MIXEDARRAY:
-                return readMixedArrayAMF0();
+                amf0 = readMixedArrayAMF0();
+                break;
             case OBJECTTERM:
-                return readObjectTermAMF0();
+                amf0 = readObjectTermAMF0();
+                break;
             case ARRAY:
-                return readArrayAMF0();
+                amf0 = readArrayAMF0();
+                break;
             case DATE:
-                return readDateAMF0();
+                amf0 = readDateAMF0();
+                break;
             case LONGSTRONG:
-                return readLongStringAMF0();
+                amf0 = readLongStringAMF0();
+                break;
             case UNSUPPORTED:
-                return readUnsupportedAMF0();
+                amf0 = readUnsupportedAMF0();
+                break;
             case RECORDSET:
-                return readRecordSetAMF0();
+                amf0 = readRecordSetAMF0();
+                break;
             case XML:
-                return readXMLAMF0();
+                amf0 = readXMLAMF0();
+                break;
             case TYPEDOBJECT:
-                return readTypedObjectAMF0();
+                amf0 = readTypedObjectAMF0();
+                break;
             case AMF3:
-                return decodeAMF3();
+                amf0 = decodeAMF3();
+                break;
             default:
                 throw new NotImplementedException("Unknown AMF0 type: " + op);
         }
+        Logger.debug("AMF0 {} as {}", type.name(), amf0 == null ? "nil" : amf0);
+        return amf0;
     }
 
 
@@ -184,7 +206,10 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
 
     @Override
     public Object readTypeReferenceAMF0() {
-        return objectListAMF0.get((readByteAsInteger() << 8) | readByteAsInteger());
+        int index = (readByteAsInteger() << 8) | readByteAsInteger();
+        Object reference = objectListAMF0.get(index);
+        Logger.debug("GET AMF0 Reference {} as {}", index, reference == null ? "nil" : reference);
+        return reference;
     }
 
     @Override
@@ -201,7 +226,7 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
     public Object readArrayAMF0() {
         int entries = readInteger();
         Object[] objects = new Object[entries];
-        objectListAMF0.add(objects);
+        storeObjectAMF0(objects);
         for (int i = 0; i < entries; i++) {
             objects[i] = decodeAMF0();
         }
@@ -239,9 +264,15 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
     @Override
     public TypedObject readTypedObjectAMF0() {
         TypedObject object = new TypedObject();
-        objectListAMF0.add(object);
+        storeObjectAMF0(object);
         object.put(readUTF8StringAMF0(), readObjectAMF0());
         return object;
+    }
+
+    @Override
+    public void storeObjectAMF0(Object object) {
+        Logger.debug("Store AMF0 Object {} at {}", object, objectListAMF0.size());
+        objectListAMF0.add(object);
     }
 
     public TypedObject decode(byte[] b, TypedObject typedObject) throws EncodingException, NotImplementedException {
@@ -267,46 +298,67 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
         byte op = read();
         AMF3Type type = AMF3Type.find(op);
         if (type == null) throw new NotImplementedException("Unknown AMF3 type: " + ByteMagic.toHex(op));
+        Object amf3;
         switch (type) {
             case UNDEFINED:
-                return readUndefinedAMF3();
+                amf3 = readUndefinedAMF3();
+                break;
             case NULL:
-                return readNullAMF3();
+                amf3 = readNullAMF3();
+                break;
             case BOOLEAN_FALSE:
-                return readBooleanFalseAMF3();
+                amf3 = readBooleanFalseAMF3();
+                break;
             case BOOLEAN_TRUE:
-                return readBooleanTrueAMF3();
+                amf3 = readBooleanTrueAMF3();
+                break;
             case INTEGER:
-                return readIntegerAMF3();
+                amf3 = readIntegerAMF3();
+                break;
             case DOUBLE:
-                return readDoubleAMF3();
+                amf3 = readDoubleAMF3();
+                break;
             case STRING:
-                return readUTF8StringAMF3();
+                amf3 = readUTF8StringAMF3();
+                break;
             case XMLDOCUMENT:
-                return readXMLDocumentAMF3();
+                amf3 = readXMLDocumentAMF3();
+                break;
             case DATE:
-                return readDateAMF3();
+                amf3 = readDateAMF3();
+                break;
             case ARRAY:
-                return readArrayAMF3();
+                amf3 = readArrayAMF3();
+                break;
             case OBJECT:
-                return readObjectAMF3();
+                amf3 = readObjectAMF3();
+                break;
             case XML:
-                return readXMLAMF3();
+                amf3 = readXMLAMF3();
+                break;
             case BYTEARRAY:
-                return readByteArrayAMF3();
+                amf3 = readByteArrayAMF3();
+                break;
             case VECTORINT:
-                return readVectorIntegerAMF3();
+                amf3 = readVectorIntegerAMF3();
+                break;
             case VECTORUNIT:
-                return readVectorUnitAMF3();
+                amf3 = readVectorUnitAMF3();
+                break;
             case VECTORDOUBLE:
-                return readVectorDoubleAMF3();
+                amf3 = readVectorDoubleAMF3();
+                break;
             case VECTOROBJECT:
-                return readVectorObjectAMF3();
+                amf3 = readVectorObjectAMF3();
+                break;
             case DICTIONARY:
-                return readDictionaryAMF3();
+                amf3 = readDictionaryAMF3();
+                break;
             default:
                 throw new NotImplementedException("Unknown AMF3 type: " + op);
         }
+        Logger.debug("AMF3 {} as {}", type.name(), amf3 == null ? "nil" : amf3);
+        return amf3;
     }
 
     @Override
@@ -362,7 +414,7 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
         String result;
         int type = readIntegerAMF3();
         if ((type & 0x01) == 0)
-            result = stringListAMF3.get(type >> 1);
+            result = getStoredStringAMF3(type >> 1);
         else {
             int length = type >> 1;
             if (length > 0) {
@@ -397,7 +449,7 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
                     }
                 }
                 result = new String(characters, 0, chars);
-                stringListAMF3.add(result);
+                storeStringAMF3(result);
             } else {
                 result = "";
             }
@@ -414,12 +466,12 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
     public LocalDateTime readDateAMF3() {
         int type = readIntegerAMF3();
         if ((type & 0x01) == 0)
-            return (LocalDateTime) objectListAMF3.get(type >> 1);
+            return (LocalDateTime) getStoredObjectAMF3(type >> 1);
         else {
             long timestamp = readDoubleAMF3().longValue();
             ZoneOffset offset = ZoneOffset.ofHours(0);
             LocalDateTime localDateTime = Instant.ofEpochMilli(timestamp).atOffset(offset).toLocalDateTime();
-            objectListAMF3.add(localDateTime);
+            storeObjectAMF3(localDateTime);
             return localDateTime;
         }
     }
@@ -428,13 +480,13 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
     public Object[] readArrayAMF3() {
         int type = readIntegerAMF3();
         if ((type & 0x01) == 0)
-            return (Object[]) objectListAMF3.get(type >> 1);
+            return (Object[]) getStoredObjectAMF3(type >> 1);
         else {
             final int size = type >> 1;
             String key = readUTF8StringAMF3();
             if (key.length() == 0) {
                 Object[] objects = new Object[size];
-                objectListAMF3.add(objects);
+                storeObjectAMF3(objects);
                 for (int i = 0; i < size; i++) {
                     objects[i] = decodeAMF3();
                 }
@@ -449,7 +501,7 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
     public Object readObjectAMF3() {
         int type = readIntegerAMF3();
         if ((type & 0x01) == 0) {
-            return objectListAMF3.get(type >> 1);
+            return getStoredObjectAMF3(type >> 1);
         } else {
             boolean defineInline = (((type >> 1) & 0x01) != 0);
             ClassDefinition classDefinition;
@@ -462,12 +514,12 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
                 for (int i = 0; i < classDefinition.properties.length; i++) {
                     classDefinition.properties[i] = readUTF8StringAMF3();
                 }
-                classListAMF3.add(classDefinition);
+                storeClassDefinitionAMF3(classDefinition);
             } else {
-                classDefinition = classListAMF3.get(type);
+                classDefinition = getStoredClassDefinitionAMF3(type);
             }
             TypedObject typedObject = new TypedObject(classDefinition.className);
-            objectListAMF3.add(typedObject);
+            storeObjectAMF3(typedObject);
             if (classDefinition.externalizable) {
                 switch (classDefinition.className) {
                     case "DSK":
@@ -513,10 +565,10 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
     public byte[] readByteArrayAMF3() {
         int type = readIntegerAMF3();
         if ((type & 0x01) == 0) {
-            return (byte[]) objectListAMF3.get(type >> 1);
+            return (byte[]) getStoredObjectAMF3(type >> 1);
         } else {
             byte[] bytes = read(type >> 1);
-            objectListAMF3.add(bytes);
+            storeObjectAMF3(bytes);
             return bytes;
         }
     }
@@ -545,6 +597,47 @@ public class AMFDecoder implements BinaryReader, AMF0Reader, AMF3Reader {
     public Object readDictionaryAMF3() {
         throw new NotImplementedException("AMF3 type " + ByteMagic.toHex(AMF3Type.DICTIONARY.getTypeIndicator()) + " is not supported");
     }
+
+    @Override
+    public void storeObjectAMF3(Object object) {
+        Logger.debug("Store AMF3 Object {} at {}", object, objectListAMF3.size());
+        objectListAMF3.add(object);
+    }
+
+
+    @Override
+    public Object getStoredObjectAMF3(int index) {
+        Object object = objectListAMF3.get(index);
+        Logger.debug("GET AMF3 Object at {} as {}", index, object);
+        return object;
+    }
+
+    @Override
+    public void storeStringAMF3(String string) {
+        Logger.debug("Store AMF3 String {} at {}", string, stringListAMF3.size());
+        stringListAMF3.add(string);
+    }
+
+    @Override
+    public String getStoredStringAMF3(int index) {
+        String string = stringListAMF3.get(index);
+        Logger.debug("GET AMF3 String at {} as {}", index, string);
+        return string;
+    }
+
+    @Override
+    public void storeClassDefinitionAMF3(ClassDefinition classDefinition) {
+        Logger.debug("Store AMF3 ClassDefinition {} at {}", classDefinition, classListAMF3.size());
+        classListAMF3.add(classDefinition);
+    }
+
+    @Override
+    public ClassDefinition getStoredClassDefinitionAMF3(int index) {
+        ClassDefinition classDefinition = classListAMF3.get(index);
+        Logger.debug("GET AMF3 ClassDefinition at {} as {}", index, classDefinition);
+        return classDefinition;
+    }
+
 
     private TypedObject readJson() {
         int size = 0;
